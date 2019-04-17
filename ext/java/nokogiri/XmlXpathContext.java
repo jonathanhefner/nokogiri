@@ -32,6 +32,7 @@
 
 package nokogiri;
 
+import java.util.List;
 import java.util.Set;
 
 import javax.xml.transform.TransformerException;
@@ -43,8 +44,11 @@ import org.apache.xpath.jaxp.JAXPPrefixResolver;
 import org.apache.xpath.jaxp.JAXPVariableStack;
 import org.apache.xpath.objects.XObject;
 import org.jruby.Ruby;
+import org.jruby.RubyArray;
+import org.jruby.RubyBasicObject;
 import org.jruby.RubyClass;
 import org.jruby.RubyObject;
+import org.jruby.RubySymbol;
 import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
 import org.jruby.exceptions.RaiseException;
@@ -114,9 +118,15 @@ public class XmlXpathContext extends RubyObject {
         if (!handler.isNil()) {
             if (!isContainsPrefix(src)) {
                 StringBuilder replacement = new StringBuilder();
-                Set<String> methodNames = handler.getMetaClass().getMethods().keySet();
+                List<RubySymbol> methodNames = (RubyArray)((RubyBasicObject)handler).send(
+                    context,
+                    context.getRuntime().newSymbol("public_methods"),
+                    context.getRuntime().newBoolean(false),
+                    null
+                );
                 final String PREFIX = NokogiriNamespaceContext.NOKOGIRI_PREFIX;
-                for (String name : methodNames) {
+                for (RubySymbol symbol : methodNames) {
+                    String name = symbol.toString();
                     replacement.setLength(0);
                     replacement.ensureCapacity(PREFIX.length() + 1 + name.length());
                     replacement.append(PREFIX).append(':').append(name);

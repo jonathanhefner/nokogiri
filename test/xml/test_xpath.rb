@@ -151,6 +151,24 @@ module Nokogiri
         end
       end
 
+      def test_search_with_xpath_query_uses_global_custom_selectors_with_arguments
+        XPathFunctions.class_eval do
+          def our_filter(*args)
+            my_filter(*args)
+          end
+        end
+
+        set = if Nokogiri.uses_libxml?
+                @xml.search('//employee/address[our_filter(., "domestic", "Yes")]', @handler)
+              else
+                @xml.search('//employee/address[nokogiri:our_filter(., "domestic", "Yes")]', @ns, @handler)
+              end
+        assert set.length > 0
+        set.each do |node|
+          assert_equal 'Yes', node['domestic']
+        end
+      end
+
       def test_pass_self_to_function
         set = if Nokogiri.uses_libxml?
                 @xml.xpath('//employee/address[my_filter(., "domestic", "Yes")]', @handler)
